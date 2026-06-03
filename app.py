@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hmac
+import json
 import os
 import uuid
 from datetime import datetime
@@ -23,6 +24,7 @@ from shift_parser import (
 
 ROOT = Path(__file__).resolve().parent
 UPLOAD_DIR = ROOT / "uploads"
+LATEST_SCHEDULE_PATH = ROOT / "data" / "latest_schedule.json"
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "local-shift-calendar-dev-key")
@@ -63,6 +65,11 @@ def index():
     )
 
 
+@app.get("/family")
+def family():
+    return render_template("family.html")
+
+
 @app.post("/api/parse")
 def parse_pdf():
     uploaded = request.files.get("pdf")
@@ -92,6 +99,7 @@ def parse_pdf():
             month=month,
             shift_map_text=shift_map_text,
         )
+        schedule["source_filename"] = original_name
         if request.form.get("year") or request.form.get("month"):
             schedule["year_month_source"] = "manual"
         elif inferred_year and inferred_month:
@@ -104,6 +112,7 @@ def parse_pdf():
                     "message": "ファイル名から年月を推定できなかったため、現在の年月で組み立てました。",
                 }
             )
+        save_latest_schedule(schedule)
     except ShiftParseError as exc:
         return jsonify({"error": str(exc), "details": exc.details}), 422
     except Exception as exc:
@@ -116,6 +125,24 @@ def resolve_code():
     payload = request.get_json(force=True)
     rules = parse_shift_map(payload.get("shift_map", DEFAULT_SHIFT_MAP))
     return jsonify(resolve_shift(payload.get("code", ""), rules))
+
+
+@app.get("/api/latest-schedule")
+def latest_schedule():
+    schedule = load_latest_schedule()
+    if not schedule:
+        return jsonify({"schedule": None}), 404
+    return jsonify({"schedule": schedule})
+
+
+@app.post("/api/latest-schedule")
+def update_latest_schedule():
+    payload = request.get_json(force=True)
+    schedule = payload.get("schedule")
+    if not isinstance(schedule, dict) or not isinstance(schedule.get("days"), list):
+        return jsonify({"error": "保存できるスケジュールがありません。"}), 400
+    save_latest_schedule(schedule)
+    return jsonify({"ok": True, "updated_at": schedule.get("updated_at")})
 
 
 @app.post("/api/ics")
@@ -197,6 +224,20 @@ def _int_or_none(value: str | None) -> int | None:
         return int(value) if value not in (None, "") else None
     except ValueError:
         return None
+
+
+def save_latest_schedule(schedule: dict) -> None:
+    schedule["updated_at"] = datetime.now().isoformat(timespec="seconds")
+    LATEST_SCHEDULE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = LATEST_SCHEDULE_PATH.with_suffix(".tmp")
+    temporary_path.write_text(json.dumps(schedule, ensure_ascii=False, indent=2), encoding="utf-8")
+    temporary_path.replace(LATEST_SCHEDULE_PATH)
+
+
+def load_latest_schedule() -> dict | None:
+    if not LATEST_SCHEDULE_PATH.exists():
+        return None
+    return json.loads(LATEST_SCHEDULE_PATH.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

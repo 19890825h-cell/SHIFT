@@ -408,6 +408,167 @@ tr.unknown {
   height: 18px;
 }
 
+.family-page {
+  background: #eef3f5;
+}
+
+.family-layout {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+.family-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 0 18px;
+}
+
+.family-hero h2 {
+  font-size: 26px;
+}
+
+.family-summary {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.family-summary span {
+  min-width: 88px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.family-summary strong {
+  margin-right: 4px;
+  color: var(--ink);
+  font-size: 22px;
+}
+
+.empty-family {
+  max-width: 560px;
+}
+
+.empty-family p {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.family-focus {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.focus-card {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.focus-card span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.focus-card strong {
+  font-size: 24px;
+}
+
+.focus-card small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.family-month {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.month-header span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.family-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.family-day {
+  display: grid;
+  gap: 10px;
+  min-height: 104px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.family-day.off {
+  background: #f8fafb;
+  color: var(--muted);
+}
+
+.family-day.unknown,
+.family-day.note {
+  background: var(--amber-soft);
+}
+
+.day-date,
+.day-shift {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.day-date strong {
+  font-size: 20px;
+}
+
+.day-date span,
+.day-shift span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.day-shift {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.day-shift strong {
+  color: var(--blue-dark);
+  font-size: 18px;
+}
+
 @media (max-width: 920px) {
   .app-header {
     align-items: flex-start;
@@ -420,6 +581,10 @@ tr.unknown {
 
   .calendar-actions {
     grid-template-columns: 1fr;
+  }
+
+  .family-days {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -436,5 +601,32 @@ tr.unknown {
 
   .result-header {
     flex-direction: column;
+  }
+
+  .family-layout {
+    padding: 12px;
+  }
+
+  .family-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .family-focus {
+    grid-template-columns: 1fr;
+  }
+
+  .family-month {
+    padding: 12px;
+  }
+
+  .family-days {
+    grid-template-columns: 1fr;
+  }
+
+  .family-day {
+    min-height: 0;
+    grid-template-columns: 76px 1fr;
+    align-items: center;
   }
 }

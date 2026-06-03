@@ -28,6 +28,7 @@ const sourceLabel = document.querySelector("#sourceLabel");
 const authBadge = document.querySelector("#authBadge");
 const authLink = document.querySelector("#authLink");
 const importStatus = document.querySelector("#importStatus");
+let saveTimer = null;
 
 renderAuth();
 
@@ -51,6 +52,7 @@ parseForm.addEventListener("submit", async (event) => {
     shiftMap.value = payload.shift_map_text || "";
     parseStatus.textContent = "読み取り完了";
     renderSchedule();
+    persistSchedule();
   } catch (error) {
     parseStatus.textContent = error.message;
   } finally {
@@ -72,6 +74,7 @@ daysBody.addEventListener("input", (event) => {
     day: day.day,
   });
   renderSchedule();
+  queuePersistSchedule();
 });
 
 document.querySelector("#icsButton").addEventListener("click", async () => {
@@ -133,6 +136,26 @@ async function refreshAuth() {
   const response = await fetch("/api/auth/status");
   state.auth = await response.json();
   renderAuth();
+}
+
+function queuePersistSchedule() {
+  window.clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(persistSchedule, 400);
+}
+
+async function persistSchedule() {
+  if (!state.schedule) {
+    return;
+  }
+  try {
+    await fetch("/api/latest-schedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ schedule: state.schedule }),
+    });
+  } catch (error) {
+    importStatus.textContent = "家族ビューへの保存に失敗しました";
+  }
 }
 
 function renderAuth() {
