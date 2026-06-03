@@ -35,7 +35,6 @@ function renderEmpty() {
   familyMembers.innerHTML = "";
   emptyFamily.hidden = false;
   familyUpdated.textContent = "未登録";
-  familyUpdated.className = "badge warn";
 }
 
 function renderFamilyMembers(members) {
@@ -46,7 +45,6 @@ function renderFamilyMembers(members) {
     .sort()
     .at(-1);
   familyUpdated.textContent = latestUpdated ? `更新 ${formatUpdated(latestUpdated)}` : "更新済み";
-  familyUpdated.className = "badge ok";
   familyMembers.innerHTML = members.map(renderMember).join("");
 }
 
@@ -54,75 +52,73 @@ function renderMember(member) {
   const schedule = member.schedule;
   const days = schedule.days || [];
   const todayKey = formatDateKey(new Date());
-  const today = days.find((day) => day.date === todayKey);
-  const next = days.find((day) => day.status === "ok" && day.date >= todayKey);
-  const workCount = days.filter((day) => day.status === "ok").length;
-  const offCount = days.filter((day) => day.status === "off").length;
+  const upcomingDays = getUpcomingDays(days, todayKey);
+  const nextOff = days.find((day) => day.status === "off" && day.date >= todayKey);
   const displayName = schedule.display_name || member.name || schedule.target_name || "名前未設定";
 
   return `
     <article class="family-member">
-      <section class="family-hero">
+      <section class="member-head">
         <div>
-          <p class="eyebrow">${escapeHtml(schedule.source_filename || "")}</p>
           <h2>${escapeHtml(displayName)}</h2>
           <small>${escapeHtml(schedule.year)}年${escapeHtml(schedule.month)}月</small>
         </div>
-        <div class="family-summary">
-          <span><strong>${escapeHtml(workCount)}</strong>勤務</span>
-          <span><strong>${escapeHtml(offCount)}</strong>休み</span>
-        </div>
       </section>
 
-      <div class="family-focus">
-        ${renderFocusCard("今日", today, "今日の予定なし")}
-        ${renderFocusCard("次の勤務", next, "今月の勤務なし")}
-      </div>
+      <section class="rest-card">
+        <span>次の休み</span>
+        ${renderNextOff(nextOff, todayKey)}
+      </section>
 
-      <div class="family-month">
-        <div class="month-header">
-          <h2>予定一覧</h2>
-          <span>${escapeHtml(schedule.year)}.${String(schedule.month).padStart(2, "0")}</span>
+      <section class="next-shifts">
+        <h3>3日分のシフト</h3>
+        <div class="next-shift-list">
+          ${upcomingDays.map(renderUpcomingDay).join("")}
         </div>
-        <div class="family-days">
-          ${days.map(renderDay).join("")}
-        </div>
-      </div>
+      </section>
     </article>
   `;
 }
 
-function renderFocusCard(label, day, emptyText) {
+function getUpcomingDays(days, todayKey) {
+  const upcoming = days.filter((day) => day.date >= todayKey).slice(0, 3);
+  if (upcoming.length > 0) {
+    return upcoming;
+  }
+  return days.slice(0, 3);
+}
+
+function renderNextOff(day, todayKey) {
   if (!day) {
     return `
-      <article class="focus-card">
-        <span>${escapeHtml(label)}</span>
-        <strong>${escapeHtml(emptyText)}</strong>
-        <small></small>
-      </article>
+      <strong>今月の休みなし</strong>
+      <small></small>
     `;
   }
+  const distance = daysBetween(todayKey, day.date);
+  const relative = distance === 0 ? "今日" : distance === 1 ? "明日" : `あと${distance}日`;
   return `
-    <article class="focus-card ${escapeHtml(day.status)}">
-      <span>${escapeHtml(label)}</span>
-      <strong>${escapeHtml(formatShift(day))}</strong>
-      <small>${escapeHtml(day.day)}日(${escapeHtml(day.weekday)})</small>
-    </article>
+    <strong>${escapeHtml(day.day)}日(${escapeHtml(day.weekday)})</strong>
+    <small>${escapeHtml(relative)}</small>
   `;
 }
 
-function renderDay(day) {
+function renderUpcomingDay(day) {
   return `
-    <article class="family-day ${escapeHtml(day.status)}">
-      <div class="day-date">
+    <article class="upcoming-day ${escapeHtml(day.status)}">
+      <div>
         <strong>${escapeHtml(day.day)}</strong>
         <span>${escapeHtml(day.weekday)}</span>
       </div>
-      <div class="day-shift">
-        <strong>${escapeHtml(formatShift(day))}</strong>
-      </div>
+      <p>${escapeHtml(formatShift(day))}</p>
     </article>
   `;
+}
+
+function daysBetween(startDate, endDate) {
+  const start = new Date(`${startDate}T00:00:00+09:00`);
+  const end = new Date(`${endDate}T00:00:00+09:00`);
+  return Math.max(0, Math.round((end - start) / 86400000));
 }
 
 function startClock() {
