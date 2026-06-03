@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>勤務カレンダー</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <p class="eyebrow">Shift to Google Calendar</p>
+        <h1>勤務カレンダー</h1>
+      </div>
+      <div class="auth-box">
+        <span id="authBadge" class="badge">確認中</span>
+        <a id="authLink" class="button secondary" href="/google/auth">Google認証</a>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel input-panel">
+        <form id="parseForm">
+          <label>
+            <span>勤務表PDF</span>
+            <input id="pdfInput" type="file" name="pdf" accept="application/pdf" required>
+          </label>
+          <input type="hidden" name="target_name" value="新里 康平">
+          <textarea id="shiftMap" hidden spellcheck="false"></textarea>
+
+          <div class="target-note">
+            <span>対象者</span>
+            <strong>新里 康平</strong>
+          </div>
+
+          <div class="toolbar">
+            <button id="parseButton" class="button primary" type="submit">読み取る</button>
+            <span id="parseStatus" class="status-line"></span>
+          </div>
+        </form>
+      </section>
+
+      <section id="resultPanel" class="panel result-panel" hidden>
+        <div class="result-header">
+          <div>
+            <p id="sourceLabel" class="eyebrow"></p>
+            <h2 id="resultTitle">確認</h2>
+          </div>
+          <div class="summary-strip">
+            <span><strong id="workCount">0</strong>勤務</span>
+            <span><strong id="offCount">0</strong>休み</span>
+            <span><strong id="confirmCount">0</strong>確認</span>
+          </div>
+        </div>
+
+        <div id="warningList" class="warnings" hidden></div>
+        <div id="shiftMapPreview" class="shift-map-preview" hidden></div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>日付</th>
+                <th>曜日</th>
+                <th>記号</th>
+                <th>時間</th>
+                <th>状態</th>
+              </tr>
+            </thead>
+            <tbody id="daysBody"></tbody>
+          </table>
+        </div>
+
+        <div class="calendar-actions">
+          <label>
+            <span>予定名</span>
+            <input id="titleTemplate" type="text" value="勤務 {code}">
+          </label>
+          <label>
+            <span>カレンダーID</span>
+            <input id="calendarId" type="text" value="primary">
+          </label>
+          <label class="check-line">
+            <input id="replaceExisting" type="checkbox" checked>
+            <span>同じ月の自動登録分を入れ替え</span>
+          </label>
+          <div class="action-buttons">
+            <button id="icsButton" class="button secondary" type="button">ICS保存</button>
+            <button id="googleButton" class="button primary" type="button">Google登録</button>
+          </div>
+        </div>
+        <div id="importStatus" class="status-line"></div>
+      </section>
+    </main>
+
+    <script>
+      window.AUTH_STATUS = {{ auth_status|tojson }};
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
