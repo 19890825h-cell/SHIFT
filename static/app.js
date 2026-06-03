@@ -12,9 +12,7 @@ window.shiftCalendarApp = {
 const offCodes = new Set(["", "H", "V", "V1"]);
 const weekdayNames = ["日", "月", "火", "水", "木", "金", "土"];
 
-const parseForm = document.querySelector("#parseForm");
-const parseButton = document.querySelector("#parseButton");
-const parseStatus = document.querySelector("#parseStatus");
+const parseForms = document.querySelectorAll(".parse-form");
 const resultPanel = document.querySelector("#resultPanel");
 const daysBody = document.querySelector("#daysBody");
 const warningList = document.querySelector("#warningList");
@@ -32,32 +30,36 @@ let saveTimer = null;
 
 renderAuth();
 
-parseForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  parseButton.disabled = true;
-  parseStatus.textContent = "読み取り中";
-  importStatus.textContent = "";
-  const formData = new FormData(parseForm);
+parseForms.forEach((form) => {
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const parseButton = form.querySelector(".parse-button");
+    const parseStatus = form.querySelector(".parse-status");
+    parseButton.disabled = true;
+    parseStatus.textContent = "読み取り中";
+    importStatus.textContent = "";
+    const formData = new FormData(form);
 
-  try {
-    const response = await fetch("/api/parse", {
-      method: "POST",
-      body: formData,
-    });
-    const payload = await response.json();
-    if (!response.ok) {
-      throw new Error(payload.error || "読み取りに失敗しました。");
+    try {
+      const response = await fetch("/api/parse", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || "読み取りに失敗しました。");
+      }
+      state.schedule = payload;
+      shiftMap.value = payload.shift_map_text || "";
+      parseStatus.textContent = "読み取り完了";
+      renderSchedule();
+      persistSchedule();
+    } catch (error) {
+      parseStatus.textContent = error.message;
+    } finally {
+      parseButton.disabled = false;
     }
-    state.schedule = payload;
-    shiftMap.value = payload.shift_map_text || "";
-    parseStatus.textContent = "読み取り完了";
-    renderSchedule();
-    persistSchedule();
-  } catch (error) {
-    parseStatus.textContent = error.message;
-  } finally {
-    parseButton.disabled = false;
-  }
+  });
 });
 
 daysBody.addEventListener("input", (event) => {
@@ -151,7 +153,11 @@ async function persistSchedule() {
     await fetch("/api/latest-schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ schedule: state.schedule }),
+      body: JSON.stringify({
+        schedule: state.schedule,
+        slot: state.schedule.slot || "member1",
+        display_name: state.schedule.display_name || state.schedule.target_name || "",
+      }),
     });
   } catch (error) {
     importStatus.textContent = "家族ビューへの保存に失敗しました";

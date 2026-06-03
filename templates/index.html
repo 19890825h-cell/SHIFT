@@ -21,24 +21,40 @@
 
     <main class="layout">
       <section class="panel input-panel">
-        <form id="parseForm">
-          <label>
-            <span>勤務表PDF</span>
-            <input id="pdfInput" type="file" name="pdf" accept="application/pdf" required>
-          </label>
-          <input type="hidden" name="target_name" value="新里 康平">
-          <textarea id="shiftMap" hidden spellcheck="false"></textarea>
+        <div class="member-forms">
+          <form class="parse-form member-input" data-slot="member1">
+            <input type="hidden" name="slot" value="member1">
+            <label>
+              <span>名前</span>
+              <input type="text" name="target_name" value="新里 康平" autocomplete="name" required>
+            </label>
+            <label>
+              <span>勤務表PDF</span>
+              <input type="file" name="pdf" accept="application/pdf" required>
+            </label>
+            <div class="toolbar">
+              <button class="button primary parse-button" type="submit">読み取る</button>
+              <span class="status-line parse-status"></span>
+            </div>
+          </form>
 
-          <div class="target-note">
-            <span>対象者</span>
-            <strong>新里 康平</strong>
-          </div>
-
-          <div class="toolbar">
-            <button id="parseButton" class="button primary" type="submit">読み取る</button>
-            <span id="parseStatus" class="status-line"></span>
-          </div>
-        </form>
+          <form class="parse-form member-input" data-slot="member2">
+            <input type="hidden" name="slot" value="member2">
+            <label>
+              <span>名前</span>
+              <input type="text" name="target_name" placeholder="名前を入力" autocomplete="name" required>
+            </label>
+            <label>
+              <span>勤務表PDF</span>
+              <input type="file" name="pdf" accept="application/pdf" required>
+            </label>
+            <div class="toolbar">
+              <button class="button primary parse-button" type="submit">読み取る</button>
+              <span class="status-line parse-status"></span>
+            </div>
+          </form>
+        </div>
+        <textarea id="shiftMap" hidden spellcheck="false"></textarea>
       </section>
 
       <section id="resultPanel" class="panel result-panel" hidden>

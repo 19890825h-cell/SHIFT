@@ -138,6 +138,20 @@ textarea {
   margin-top: 14px;
 }
 
+.member-forms {
+  display: grid;
+  gap: 14px;
+}
+
+.member-input {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
 .target-note {
   display: flex;
   align-items: center;
@@ -418,6 +432,19 @@ tr.unknown {
   padding: 18px;
 }
 
+.family-members {
+  display: grid;
+  gap: 18px;
+}
+
+.family-member {
+  padding-bottom: 18px;
+}
+
+.family-member + .family-member {
+  border-top: 1px solid var(--line);
+}
+
 .family-hero {
   display: flex;
   align-items: flex-end;
@@ -428,6 +455,14 @@ tr.unknown {
 
 .family-hero h2 {
   font-size: 26px;
+}
+
+.family-hero small {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .family-summary {
@@ -492,6 +527,12 @@ tr.unknown {
   color: var(--muted);
   font-size: 13px;
   font-weight: 700;
+}
+
+.focus-card.off,
+.focus-card.unknown,
+.focus-card.note {
+  background: #f8fafb;
 }
 
 .family-month {
@@ -566,7 +607,7 @@ tr.unknown {
 
 .day-shift strong {
   color: var(--blue-dark);
-  font-size: 18px;
+  font-size: 16px;
 }
 
 @media (max-width: 920px) {

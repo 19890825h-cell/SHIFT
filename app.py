@@ -83,7 +83,11 @@ def parse_pdf():
     saved_path = UPLOAD_DIR / f"{uuid.uuid4().hex}_{filename}"
     uploaded.save(saved_path)
 
-    target_name = request.form.get("target_name", "新里 康平").strip() or "新里 康平"
+    slot = normalize_slot(request.form.get("slot") or "member1")
+    target_name = request.form.get("target_name", "").strip()
+    if not target_name:
+        return jsonify({"error": "名前を入力してください。PDF内の氏名と照合します。"}), 400
+    display_name = request.form.get("display_name", "").strip() or target_name
     inferred_year, inferred_month = parse_year_month(original_name)
     now = datetime.now()
     year = _int_or_none(request.form.get("year")) or inferred_year or now.year
@@ -100,6 +104,8 @@ def parse_pdf():
             shift_map_text=shift_map_text,
         )
         schedule["source_filename"] = original_name
+        schedule["slot"] = slot
+        schedule["display_name"] = display_name
         if request.form.get("year") or request.form.get("month"):
             schedule["year_month_source"] = "manual"
         elif inferred_year and inferred_month:
@@ -112,7 +118,7 @@ def parse_pdf():
                     "message": "ファイル名から年月を推定できなかったため、現在の年月で組み立てました。",
                 }
             )
-        save_latest_schedule(schedule)
+        save_family_schedule(slot, display_name, schedule)
     except ShiftParseError as exc:
         return jsonify({"error": str(exc), "details": exc.details}), 422
     except Exception as exc:
@@ -129,10 +135,12 @@ def resolve_code():
 
 @app.get("/api/latest-schedule")
 def latest_schedule():
-    schedule = load_latest_schedule()
-    if not schedule:
-        return jsonify({"schedule": None}), 404
-    return jsonify({"schedule": schedule})
+    family_state = load_family_schedules()
+    has_schedule = any(member.get("schedule") for member in family_state["members"])
+    if not has_schedule:
+        return jsonify({"members": family_state["members"], "schedule": None}), 404
+    first_schedule = next((member.get("schedule") for member in family_state["members"] if member.get("schedule")), None)
+    return jsonify({"members": family_state["members"], "schedule": first_schedule})
 
 
 @app.post("/api/latest-schedule")
@@ -141,7 +149,9 @@ def update_latest_schedule():
     schedule = payload.get("schedule")
     if not isinstance(schedule, dict) or not isinstance(schedule.get("days"), list):
         return jsonify({"error": "保存できるスケジュールがありません。"}), 400
-    save_latest_schedule(schedule)
+    slot = normalize_slot(payload.get("slot") or schedule.get("slot") or "member1")
+    display_name = payload.get("display_name") or schedule.get("display_name") or schedule.get("target_name") or ""
+    save_family_schedule(slot, display_name, schedule)
     return jsonify({"ok": True, "updated_at": schedule.get("updated_at")})
 
 
@@ -226,18 +236,76 @@ def _int_or_none(value: str | None) -> int | None:
         return None
 
 
+def normalize_slot(value: str) -> str:
+    return "member2" if value == "member2" else "member1"
+
+
 def save_latest_schedule(schedule: dict) -> None:
+    save_family_schedule(schedule.get("slot", "member1"), schedule.get("display_name") or schedule.get("target_name") or "", schedule)
+
+
+def save_family_schedule(slot: str, display_name: str, schedule: dict) -> None:
+    family_state = load_family_schedules()
+    slot = normalize_slot(slot)
     schedule["updated_at"] = datetime.now().isoformat(timespec="seconds")
+    schedule["slot"] = slot
+    schedule["display_name"] = display_name or schedule.get("target_name", "")
+
+    for member in family_state["members"]:
+        if member["slot"] == slot:
+            member["name"] = schedule["display_name"]
+            member["schedule"] = schedule
+            member["updated_at"] = schedule["updated_at"]
+            break
+    family_state["updated_at"] = schedule["updated_at"]
+
     LATEST_SCHEDULE_PATH.parent.mkdir(parents=True, exist_ok=True)
     temporary_path = LATEST_SCHEDULE_PATH.with_suffix(".tmp")
-    temporary_path.write_text(json.dumps(schedule, ensure_ascii=False, indent=2), encoding="utf-8")
+    temporary_path.write_text(json.dumps(family_state, ensure_ascii=False, indent=2), encoding="utf-8")
     temporary_path.replace(LATEST_SCHEDULE_PATH)
 
 
 def load_latest_schedule() -> dict | None:
+    first_schedule = next(
+        (member.get("schedule") for member in load_family_schedules()["members"] if member.get("schedule")),
+        None,
+    )
+    return first_schedule
+
+
+def load_family_schedules() -> dict:
+    empty_state = {
+        "members": [
+            {"slot": "member1", "name": "新里 康平", "schedule": None, "updated_at": None},
+            {"slot": "member2", "name": "", "schedule": None, "updated_at": None},
+        ],
+        "updated_at": None,
+    }
     if not LATEST_SCHEDULE_PATH.exists():
-        return None
-    return json.loads(LATEST_SCHEDULE_PATH.read_text(encoding="utf-8"))
+        return empty_state
+
+    raw = json.loads(LATEST_SCHEDULE_PATH.read_text(encoding="utf-8"))
+    if isinstance(raw, dict) and isinstance(raw.get("members"), list):
+        members_by_slot = {member.get("slot"): member for member in raw["members"]}
+        for member in empty_state["members"]:
+            stored = members_by_slot.get(member["slot"])
+            if stored:
+                member.update(stored)
+        empty_state["updated_at"] = raw.get("updated_at")
+        return empty_state
+
+    if isinstance(raw, dict) and isinstance(raw.get("days"), list):
+        raw["slot"] = raw.get("slot", "member1")
+        raw["display_name"] = raw.get("display_name") or raw.get("target_name") or "新里 康平"
+        empty_state["members"][0].update(
+            {
+                "name": raw["display_name"],
+                "schedule": raw,
+                "updated_at": raw.get("updated_at"),
+            }
+        )
+        empty_state["updated_at"] = raw.get("updated_at")
+    return empty_state
 
 
 if __name__ == "__main__":

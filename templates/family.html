@@ -19,44 +19,12 @@
     </header>
 
     <main class="family-layout">
-      <section class="family-hero">
-        <div>
-          <p id="familySource" class="eyebrow"></p>
-          <h2 id="familyTitle">勤務予定</h2>
-        </div>
-        <div class="family-summary">
-          <span><strong id="familyWorkCount">0</strong>勤務</span>
-          <span><strong id="familyOffCount">0</strong>休み</span>
-        </div>
-      </section>
-
       <section id="emptyFamily" class="panel empty-family" hidden>
         <h2>勤務表がまだありません</h2>
         <p>管理画面でPDFを読み取ると、ここに最新の予定が表示されます。</p>
       </section>
 
-      <section id="familyContent" hidden>
-        <div class="family-focus">
-          <article class="focus-card today">
-            <span>今日</span>
-            <strong id="todayShift">-</strong>
-            <small id="todayDetail">-</small>
-          </article>
-          <article class="focus-card next">
-            <span>次の勤務</span>
-            <strong id="nextShift">-</strong>
-            <small id="nextDetail">-</small>
-          </article>
-        </div>
-
-        <div class="family-month">
-          <div class="month-header">
-            <h2>今月の勤務</h2>
-            <span id="familyMonthLabel"></span>
-          </div>
-          <div id="familyDays" class="family-days"></div>
-        </div>
-      </section>
+      <section id="familyMembers" class="family-members"></section>
     </main>
 
     <script src="{{ url_for('static', filename='family.js') }}"></script>
