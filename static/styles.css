@@ -610,6 +610,118 @@ tr.unknown {
   font-size: 16px;
 }
 
+.family-live-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.clock-card,
+.weather-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 16px;
+}
+
+.clock-card {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+}
+
+.clock-card span,
+.weather-header span,
+.weather-day span,
+.weather-day small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.clock-card strong {
+  font-size: 34px;
+  line-height: 1;
+}
+
+.clock-card small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.weather-card {
+  display: grid;
+  gap: 12px;
+}
+
+.weather-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weather-header strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+}
+
+.weather-header small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.weather-days {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.weather-day {
+  display: grid;
+  gap: 10px;
+  min-height: 112px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fbfcfd;
+}
+
+.weather-day strong {
+  display: block;
+  margin: 4px 0;
+  font-size: 19px;
+}
+
+.weather-day.clear {
+  border-color: #f0c36a;
+  background: #fff8e7;
+}
+
+.weather-day.cloudy {
+  border-color: #cfd7de;
+  background: #f6f8fa;
+}
+
+.weather-day.rain,
+.weather-day.storm {
+  border-color: #a8c7df;
+  background: #eef7fc;
+}
+
+.weather-day.unavailable {
+  grid-column: 1 / -1;
+}
+
+.weather-values {
+  display: grid;
+  gap: 3px;
+}
+
 @media (max-width: 920px) {
   .app-header {
     align-items: flex-start;
@@ -626,6 +738,10 @@ tr.unknown {
 
   .family-days {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .family-live-panel {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -677,5 +793,13 @@ tr.unknown {
     min-height: 0;
     grid-template-columns: 76px 1fr;
     align-items: center;
+  }
+
+  .weather-days {
+    grid-template-columns: 1fr;
+  }
+
+  .clock-card strong {
+    font-size: 30px;
   }
 }

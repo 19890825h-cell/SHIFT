@@ -1,9 +1,16 @@
 const familyMembers = document.querySelector("#familyMembers");
 const emptyFamily = document.querySelector("#emptyFamily");
 const familyUpdated = document.querySelector("#familyUpdated");
+const currentClock = document.querySelector("#currentClock");
+const currentDateLabel = document.querySelector("#currentDateLabel");
+const weatherUpdated = document.querySelector("#weatherUpdated");
+const weatherDays = document.querySelector("#weatherDays");
 
 loadFamilySchedule();
+startClock();
+loadWeather();
 window.setInterval(loadFamilySchedule, 60000);
+window.setInterval(loadWeather, 60 * 60 * 1000);
 
 async function loadFamilySchedule() {
   try {
@@ -116,6 +123,123 @@ function renderDay(day) {
       </div>
     </article>
   `;
+}
+
+function startClock() {
+  renderClock();
+  window.setInterval(renderClock, 1000);
+}
+
+function renderClock() {
+  const now = new Date();
+  currentClock.textContent = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).format(now);
+  currentDateLabel.textContent = new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    weekday: "short",
+  }).format(now);
+}
+
+async function loadWeather() {
+  try {
+    const url = new URL("https://api.open-meteo.com/v1/forecast");
+    url.search = new URLSearchParams({
+      latitude: "26.2124",
+      longitude: "127.6809",
+      daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max",
+      timezone: "Asia/Tokyo",
+      forecast_days: "3",
+    }).toString();
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("weather unavailable");
+    }
+    const payload = await response.json();
+    renderWeather(payload.daily);
+  } catch (error) {
+    weatherUpdated.textContent = "取得できません";
+    weatherDays.innerHTML = `
+      <article class="weather-day unavailable">
+        <strong>天気を取得できません</strong>
+        <span>ネット接続を確認してください</span>
+      </article>
+    `;
+  }
+}
+
+function renderWeather(daily) {
+  if (!daily || !Array.isArray(daily.time)) {
+    throw new Error("invalid weather");
+  }
+  weatherUpdated.textContent = `更新 ${formatUpdated(new Date().toISOString())}`;
+  weatherDays.innerHTML = daily.time.slice(0, 3).map((dateText, index) => {
+    const label = ["今日", "明日", "あさって"][index] || formatWeatherDate(dateText);
+    const weather = describeWeather(daily.weather_code?.[index]);
+    const maxTemp = daily.temperature_2m_max?.[index];
+    const minTemp = daily.temperature_2m_min?.[index];
+    const rain = daily.precipitation_probability_max?.[index];
+    return `
+      <article class="weather-day ${escapeHtml(weather.level)}">
+        <div>
+          <span>${escapeHtml(label)}</span>
+          <strong>${escapeHtml(weather.label)}</strong>
+          <small>${escapeHtml(formatWeatherDate(dateText))}</small>
+        </div>
+        <div class="weather-values">
+          <span>${escapeHtml(formatTemperature(minTemp))} / ${escapeHtml(formatTemperature(maxTemp))}</span>
+          <span>降水 ${escapeHtml(formatPercent(rain))}</span>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function describeWeather(code) {
+  if ([0].includes(code)) {
+    return { label: "晴れ", level: "clear" };
+  }
+  if ([1, 2].includes(code)) {
+    return { label: "晴れ時々くもり", level: "clear" };
+  }
+  if ([3, 45, 48].includes(code)) {
+    return { label: "くもり", level: "cloudy" };
+  }
+  if ([51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82].includes(code)) {
+    return { label: "雨", level: "rain" };
+  }
+  if ([71, 73, 75, 77, 85, 86].includes(code)) {
+    return { label: "雪", level: "rain" };
+  }
+  if ([95, 96, 99].includes(code)) {
+    return { label: "雷雨", level: "storm" };
+  }
+  return { label: "確認中", level: "cloudy" };
+}
+
+function formatWeatherDate(value) {
+  const date = new Date(`${value}T00:00:00+09:00`);
+  return new Intl.DateTimeFormat("ja-JP", {
+    timeZone: "Asia/Tokyo",
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+  }).format(date);
+}
+
+function formatTemperature(value) {
+  return Number.isFinite(value) ? `${Math.round(value)}℃` : "-";
+}
+
+function formatPercent(value) {
+  return Number.isFinite(value) ? `${Math.round(value)}%` : "-";
 }
 
 function formatShift(day) {

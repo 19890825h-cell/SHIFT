@@ -25,6 +25,25 @@
       </section>
 
       <section id="familyMembers" class="family-members"></section>
+
+      <section class="family-live-panel" aria-label="時刻と天気">
+        <article class="clock-card">
+          <span>現在時刻</span>
+          <strong id="currentClock">--:--</strong>
+          <small id="currentDateLabel">Asia/Tokyo</small>
+        </article>
+
+        <article class="weather-card">
+          <div class="weather-header">
+            <div>
+              <span>沖縄県内の天気</span>
+              <strong>那覇周辺</strong>
+            </div>
+            <small id="weatherUpdated">取得中</small>
+          </div>
+          <div id="weatherDays" class="weather-days"></div>
+        </article>
+      </section>
     </main>
 
     <script src="{{ url_for('static', filename='family.js') }}"></script>
