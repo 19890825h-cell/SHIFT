@@ -67,12 +67,12 @@ function renderMember(member) {
       </section>
 
       <section class="rest-card">
-        <span>次の休み</span>
+        <span><i class="mini-icon rest-icon" aria-hidden="true"></i>次の休み</span>
         ${renderNextOff(nextOff, todayKey)}
       </section>
 
       <section class="next-shifts">
-        <h3>3日分のシフト</h3>
+        <h3><i class="mini-icon shift-icon" aria-hidden="true"></i>3日分のシフト</h3>
         <div class="next-shift-list">
           ${upcomingDays.map(renderUpcomingDay).join("")}
         </div>
@@ -111,7 +111,7 @@ function renderUpcomingDay(day) {
         <strong>${escapeHtml(day.day)}</strong>
         <span>${escapeHtml(day.weekday)}</span>
       </div>
-      <p>${escapeHtml(formatShift(day))}</p>
+      <p><i class="mini-icon ${day.status === "off" ? "rest-icon" : "shift-icon"}" aria-hidden="true"></i>${escapeHtml(formatShift(day))}</p>
     </article>
   `;
 }
@@ -219,6 +219,7 @@ function renderWeather(daily) {
     const rain = daily.precipitation_probability_max?.[index];
     return `
       <article class="weather-day ${escapeHtml(weather.level)}">
+        ${renderWeatherIcon(weather.level)}
         <div>
           <span>${escapeHtml(label)}</span>
           <strong>${escapeHtml(weather.label)}</strong>
@@ -231,6 +232,16 @@ function renderWeather(daily) {
       </article>
     `;
   }).join("");
+}
+
+function renderWeatherIcon(level) {
+  if (level === "clear") {
+    return '<i class="weather-icon sun-icon" aria-hidden="true"><span></span></i>';
+  }
+  if (level === "rain" || level === "storm") {
+    return '<i class="weather-icon rain-icon" aria-hidden="true"><span></span><b></b><b></b><b></b></i>';
+  }
+  return '<i class="weather-icon cloud-icon" aria-hidden="true"><span></span></i>';
 }
 
 function describeWeather(code) {
