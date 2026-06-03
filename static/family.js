@@ -5,6 +5,7 @@ const currentClock = document.querySelector("#currentClock");
 const currentDateLabel = document.querySelector("#currentDateLabel");
 const weatherUpdated = document.querySelector("#weatherUpdated");
 const weatherDays = document.querySelector("#weatherDays");
+let previousClockText = "";
 
 loadFamilySchedule();
 startClock();
@@ -128,13 +129,14 @@ function startClock() {
 
 function renderClock() {
   const now = new Date();
-  currentClock.textContent = new Intl.DateTimeFormat("ja-JP", {
+  const clockText = new Intl.DateTimeFormat("ja-JP", {
     timeZone: "Asia/Tokyo",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
     hour12: false,
   }).format(now);
+  renderFlipClock(clockText);
   currentDateLabel.textContent = new Intl.DateTimeFormat("ja-JP", {
     timeZone: "Asia/Tokyo",
     year: "numeric",
@@ -142,6 +144,39 @@ function renderClock() {
     day: "numeric",
     weekday: "short",
   }).format(now);
+}
+
+function renderFlipClock(clockText) {
+  currentClock.setAttribute("aria-label", clockText);
+  if (!previousClockText || previousClockText.length !== clockText.length || currentClock.children.length === 0) {
+    currentClock.innerHTML = [...clockText].map(renderClockPart).join("");
+    previousClockText = clockText;
+    return;
+  }
+
+  [...clockText].forEach((char, index) => {
+    const part = currentClock.children[index];
+    if (!part || part.classList.contains("flip-separator")) {
+      return;
+    }
+    const value = part.querySelector(".flip-value");
+    if (!value || value.textContent === char) {
+      return;
+    }
+    part.dataset.prev = value.textContent || char;
+    value.textContent = char;
+    part.classList.remove("flip-animate");
+    void part.offsetWidth;
+    part.classList.add("flip-animate");
+  });
+  previousClockText = clockText;
+}
+
+function renderClockPart(char) {
+  if (char === ":") {
+    return '<span class="flip-separator">:</span>';
+  }
+  return `<span class="flip-digit" data-prev="${escapeHtml(char)}"><span class="flip-value">${escapeHtml(char)}</span></span>`;
 }
 
 async function loadWeather() {
