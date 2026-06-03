@@ -434,15 +434,15 @@ tr.unknown {
 
 .family-members {
   display: grid;
+  grid-template-columns: repeat(2, minmax(360px, 1fr));
   gap: 18px;
+  align-items: start;
+  overflow-x: auto;
+  padding-bottom: 8px;
 }
 
 .family-member {
-  padding-bottom: 18px;
-}
-
-.family-member + .family-member {
-  border-top: 1px solid var(--line);
+  min-width: 0;
 }
 
 .family-hero {
@@ -625,7 +625,7 @@ tr.unknown {
   }
 
   .family-days {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -653,8 +653,16 @@ tr.unknown {
     flex-direction: column;
   }
 
+  .family-members {
+    grid-template-columns: repeat(2, minmax(330px, 1fr));
+    margin-left: -12px;
+    margin-right: -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
   .family-focus {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .family-month {
